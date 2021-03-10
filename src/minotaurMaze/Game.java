@@ -28,19 +28,14 @@ public class Game {
         System.out.println("Построен новый лабиринт");
         cell.start();
         Graph g = cell.createGraphFromCoords();
-        for (Map.Entry entry : g.getNodes().entrySet()) {
-            String coord = (String) entry.getKey();
-//            System.out.println("Нод графа = " + coord.toString());
-//            System.out.println("Количество связей у нода = " + g.getNode(coord).getEdges().size());
-        }
-        List<Edge> list = g.getEdges();
 
         if (g.getIstok().getCoord().isExtreme) {
             System.out.println("Поток = 0, минотавр находится у края лабиринта");
         } else {
             LinkedHashMap<Edge, Integer> flow = getMaxFlow(g, g.getIstok().getCoord(), g.getStok().getCoord());
+            System.out.println("\n");
             System.out.println("flow = " + flow);
-            System.out.println("Поток = " + getFlowSize(flow, g, g.getIstok().getCoord()));
+            System.out.println("Поток = " + getFlowSize2(flow, g, g.getIstok().getCoord()));
         }
     }
 
@@ -65,10 +60,8 @@ public class Game {
         HashMap<Edge, Integer> flow = new LinkedHashMap<Edge, Integer>();
         // Create initial empty flow.
         for (Edge e : g.getEdges()) {
-            if(e.getCapacity()==1) {
+            if (e.getCapacity() == 1) {
                 flow.put(e, 1);
-            } else {
-                flow.put(e, 0);
             }
         }
 
@@ -87,15 +80,12 @@ public class Game {
                 // direction.
                 if (edge.getStart().equals(lastNode)) {
                     c = edge.getCapacity() - flow.get(edge);
-                    System.out.println("Test 8");
                     lastNode = edge.getTarget();
                 } else {
                     c = flow.get(edge);
-                    System.out.println("Test 9");
                     lastNode = edge.getStart();
                 }
                 if (c < minCapacity) {
-                    System.out.println("Test 10");
                     minCapacity = c;
                 }
             }
@@ -126,57 +116,112 @@ public class Game {
      * @param source The object identifying the source node of the flow
      * @return The value of the given flow
      */
-    static int getFlowSize(HashMap<Edge, Integer> flow, Graph g,
+    static int getFlowSize(LinkedHashMap<Edge, Integer> flow, Graph g,
                            Coord source) {
+        HashMap<Coord, Integer> currentFlow = new HashMap<>();
         Node sourceNode = g.getNode(source.toString());
         System.out.println("Количество рёбер из истока =  " + sourceNode.getOutLeadingOrder());
         System.out.println("flow = " + flow);
-        List<LinkedList<Edge>> routes = new ArrayList<>();
+        List<LinkedList<Edge>> routes = new LinkedList<>();
         LinkedList<Edge> currentRoute = new LinkedList<>();
         Map<Integer, Integer> map = new HashMap<>();
         int maximumFlow = 0;
-        int currentPathLength = 0;
-        int maxPathLength = 0;
-        int counter = 1;
         for (Map.Entry entry : flow.entrySet()) {
             Edge edge = (Edge) entry.getKey();
-            maxPathLength++;
-            currentPathLength++;
+            currentFlow.put(edge.getTarget(), 1);
             currentRoute.add(edge);
-
+//            if(currentRoute.size()==1 && currentFlow.containsKey(edge.getStart())) {
             if (edge.getTarget().equals(g.getStok().getCoord())) {
                 routes.add(currentRoute);
                 currentRoute = new LinkedList<>();
-                if (currentPathLength > maxPathLength) {
-                    maxPathLength = currentPathLength;
-                }
-                maximumFlow++;
-                map.put(counter, currentPathLength);
-                counter++;
-                currentPathLength = 0;
+                currentFlow = new HashMap<>();
+//                isNewRoute = true;
             }
-            currentPathLength++;
         }
+//        }
+        maximumFlow = routes.size();
         System.out.println("Количество путей = " + routes.size());
 //        int crosses = checkRoutes(routes);
-        System.out.println("map = " + map);
+        for (LinkedList<Edge> list : routes) {
+            System.out.println("Путь: ");
+            for (Edge edge : list) {
+                System.out.println(edge);
+            }
+            System.out.println("\n");
+        }
+//        if (maximumFlow > sourceNode.getOutLeadingOrder()) {
+//            maximumFlow = sourceNode.getOutLeadingOrder();
+//        }
+        return maximumFlow;
+    }
+
+    static int getFlowSize2(LinkedHashMap<Edge, Integer> flow, Graph g,
+                            Coord source) {
+        HashMap<Coord, Integer> currentFlow = new HashMap<>();
+        Node sourceNode = g.getNode(source.toString());
+        System.out.println("Количество рёбер из истока =  " + sourceNode.getOutLeadingOrder());
+        System.out.println("flow = " + flow);
+        List<LinkedList<Edge>> routes = new LinkedList<>();
+        LinkedList<Edge> currentRoute = new LinkedList<>();
+        LinkedList<Edge> unUsedEdges = new LinkedList<>();
+        int maximumFlow = 0;
+        Edge currentEdge = null;
+        for (Map.Entry entry : flow.entrySet()) {
+            Edge nextEdge = (Edge) entry.getKey();
+            if (currentEdge == null) {
+                currentRoute.add(nextEdge);
+                currentEdge = nextEdge;
+            } else if (currentEdge != nextEdge && nextEdge.getStart().equals(currentEdge.getTarget())) {
+                if (!currentFlow.containsKey(nextEdge.getStart())) {
+                    currentRoute.add(nextEdge);
+                    currentFlow.put(nextEdge.getStart(), 1);
+                    currentEdge = nextEdge;
+                    if (nextEdge.getTarget().equals(g.getStok().getCoord())) {
+                        routes.add(currentRoute);
+                        currentRoute = new LinkedList<>();
+//                        currentEdge = null;
+                    }
+                }
+            } else {
+                unUsedEdges.add(nextEdge);
+            }
+        }
+        for (Edge edge : unUsedEdges) {
+            System.out.println("Грань " + edge);
+        }
+        currentRoute = new LinkedList<>();
+        for (int i = 0; i < unUsedEdges.size(); i++) {
+            currentEdge = unUsedEdges.get(i);
+            if (!currentFlow.containsKey(currentEdge.getStart())) {
+                currentRoute.add(currentEdge);
+                currentFlow.put(currentEdge.getStart(), 1);
+                if (currentEdge.getTarget().equals(g.getStok().getCoord())) {
+                    routes.add(currentRoute);
+                    currentRoute = new LinkedList<>();
+                }
+            }
+        }
+
+        maximumFlow = routes.size();
+        System.out.println("Количество путей = " + routes.size());
+//        int crosses = checkRoutes(routes);
+        for (LinkedList<Edge> list : routes) {
+            System.out.println("Путь: ");
+            for (Edge edge : list) {
+                System.out.println(edge);
+            }
+            System.out.println("\n");
+        }
         if (maximumFlow > sourceNode.getOutLeadingOrder()) {
             maximumFlow = sourceNode.getOutLeadingOrder();
         }
-//        if (crosses != 0) {
-//            maximumFlow = maximumFlow - 1;
-//        }
-//        for (int i = 0; i < sourceNode.getOutLeadingOrder(); i++) {
-//            maximumFlow += flow.get(sourceNode.getEdge(i));
-//            System.out.println("Увеличиваем поток на " + flow.get(sourceNode.getEdge(i)));
-//        }
         return maximumFlow;
     }
 
     private static int checkRoutes(List<LinkedList<Edge>> routes) {
         int countOfCrosses = 0;
         boolean ifFound = false;
-        for (int i = 0; i < routes.size()-1; i++) {
+        for (int i = 0; i < routes.size() - 1; i++) {
             LinkedList<Edge> currentRoute = routes.get(i);
             System.out.println("Список граней = " + currentRoute);
             LinkedList<Edge> nextRoute = routes.get(i + 1);
@@ -245,23 +290,14 @@ public class Game {
                 System.out.println("Количество граней для нода = " + node.getOutLeadingOrder());
                 for (int i = 0; i < node.getOutLeadingOrder(); i++) {
                     Edge e = node.getEdge(i);
-                    System.out.println("Добавляем координату " + e.getTarget() + " в список");
-                    System.out.println("edge = " + e);
                     // Only add the node if the flow can be changed in an out
                     // leading direction. Also break, if the target is reached.
-                    System.out.println("e.getStart() = " + e.getStart());
-                    System.out.println("coord = " + coord);
-                    System.out.println("\n");
-                    System.out.println("flow.get(e) = " + flow.get(e));
-                    System.out.println("e.getCapacity() = " + e.getCapacity());
-                    System.out.println("\n");
-                    System.out.println(e.getStart().equals(coord));
-                    System.out.println(!parent.containsKey(e.getTarget()));
                     if (e.getStart().equals(coord)
                             && !parent.containsKey(e.getTarget())
                             && !(visited.contains(e.getStart()) || visited.contains(e.getTarget()))
-                            && flow.get(e) < e.getCapacity()) {
+                            && flow.get(e) <= e.getCapacity()) {
                         System.out.println("Test Point 3");
+                        parent.put(e.getStart(), e);
                         parent.put(e.getTarget(), e);
                         if (e.getTarget().equals(target)) {
                             System.out.println("Найден сток");
@@ -273,10 +309,9 @@ public class Game {
                     } else if (e.getTarget().equals(coord)
                             && !parent.containsKey(e.getStart())
                             && !(visited.contains(e.getStart()) || visited.contains(e.getTarget()))
-                            && flow.get(e) > 0) {
-                        System.out.println("flow.get(e) = " + flow.get(e));
-                        System.out.println("Test Point 4");
+                            && flow.get(e) >= 0) {
                         parent.put(e.getStart(), e);
+                        parent.put(e.getTarget(), e);
                         if (e.getStart().equals(target)) {
                             System.out.println("Найден сток");
                             break all;
@@ -290,7 +325,7 @@ public class Game {
             fringe = newFringe;
         }
         System.out.println("\n");
-        System.out.println("fringe пуст?  " + fringe.isEmpty());
+        System.out.println("fringe пуст? - " + fringe.isEmpty());
         // Return null, if no path was found.
         if (fringe.isEmpty()) {
             return null;

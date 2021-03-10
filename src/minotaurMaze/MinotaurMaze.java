@@ -27,8 +27,8 @@ class MinotaurMaze extends JFrame {
     private Game game;
     private JPanel panel;
 
-    private final int COLS = 7;
-    private final int ROWS = 7;
+    private final int COLS = 5;
+    private final int ROWS = 5;
     private final int IMAGES_SIZE = 50;
 
     public static void main(String[] args) {

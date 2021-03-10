@@ -15,10 +15,10 @@ public class Cell {
 
     void start() {
         cellMap = new Matrix(Box.OPENED);
-        for (int j = 0; j < 31; j++) {
+        for (int j = 0; j < 11; j++) {
             Coord coord = Ranges.getRandomCoord();
             cellMap.set(coord, Box.CLOSED);
-            if (j == 30) {
+            if (j == 10) {
                 cellMap.set(coord, Box.MINO);
             }
         }
@@ -133,7 +133,7 @@ public class Cell {
 
     private void createStokEdgeForCoord(Graph graph, Coord coord) {
             System.out.println("Создаём связь от вершины к стоку");
-            Edge edge = graph.addEdge(coord, graph.getStok().getCoord(),0);
+            Edge edge = graph.addEdge(coord, graph.getStok().getCoord(),1);
             Node node = graph.getNode(coord.toString());
             node.addEdge(edge);
     }
