@@ -19,6 +19,7 @@ public class Game {
     Cell cell = new Cell();
 
     public static List<Coord> visited = new ArrayList<>();
+    public static List<Coord> visitedCoords = new ArrayList<>();
 
     public Game(int cols, int rows) {
         Ranges.setSize(new Coord(cols, rows));
@@ -128,7 +129,7 @@ public class Game {
         int maximumFlow = 0;
         for (Map.Entry entry : flow.entrySet()) {
             Edge edge = (Edge) entry.getKey();
-            currentFlow.put(edge.getTarget(), 1);
+            currentFlow.put(edge.getStart(), 1);
             currentRoute.add(edge);
 //            if(currentRoute.size()==1 && currentFlow.containsKey(edge.getStart())) {
             if (edge.getTarget().equals(g.getStok().getCoord())) {
@@ -163,45 +164,60 @@ public class Game {
         System.out.println("flow = " + flow);
         List<LinkedList<Edge>> routes = new LinkedList<>();
         LinkedList<Edge> currentRoute = new LinkedList<>();
+        LinkedList<Edge> usedEdges = new LinkedList<>();
         LinkedList<Edge> unUsedEdges = new LinkedList<>();
         int maximumFlow = 0;
         Edge currentEdge = null;
         for (Map.Entry entry : flow.entrySet()) {
             Edge nextEdge = (Edge) entry.getKey();
-            if (currentEdge == null) {
-                currentRoute.add(nextEdge);
-                currentEdge = nextEdge;
-            } else if (currentEdge != nextEdge && nextEdge.getStart().equals(currentEdge.getTarget())) {
-                if (!currentFlow.containsKey(nextEdge.getStart())) {
-                    currentRoute.add(nextEdge);
-                    currentFlow.put(nextEdge.getStart(), 1);
-                    currentEdge = nextEdge;
-                    if (nextEdge.getTarget().equals(g.getStok().getCoord())) {
-                        routes.add(currentRoute);
-                        currentRoute = new LinkedList<>();
-//                        currentEdge = null;
-                    }
-                }
-            } else {
-                unUsedEdges.add(nextEdge);
-            }
+//            if (currentEdge == null) {
+//                currentRoute.add(nextEdge);
+//                currentEdge = nextEdge;
+//            } else if (currentEdge != nextEdge && nextEdge.getStart().equals(currentEdge.getTarget())) {
+//                currentRoute.add(nextEdge);
+////                if (!Ranges.getCoordsAround(source).contains(nextEdge.getStart())) {
+//                    visitedCoords.add(nextEdge.getStart());
+////                }
+//                currentEdge = nextEdge;
+//                if (nextEdge.getTarget().equals(g.getStok().getCoord())) {
+//                    routes.add(currentRoute);
+//                    currentRoute = new LinkedList<>();
+//                }
+//            } else {
+            usedEdges.add(nextEdge);
         }
-        for (Edge edge : unUsedEdges) {
+//        }
+        for (Edge edge : usedEdges) {
             System.out.println("Грань " + edge);
         }
         currentRoute = new LinkedList<>();
-        for (int i = 0; i < unUsedEdges.size(); i++) {
-            currentEdge = unUsedEdges.get(i);
-            if (!currentFlow.containsKey(currentEdge.getStart())) {
-                currentRoute.add(currentEdge);
-                currentFlow.put(currentEdge.getStart(), 1);
-                if (currentEdge.getTarget().equals(g.getStok().getCoord())) {
-                    routes.add(currentRoute);
-                    currentRoute = new LinkedList<>();
+        Coord currentCoord;
+        for (Coord coord : Ranges.getCoordsAround(source)) {
+            if (Cell.cellMap.get(coord) == Box.OPENED) {
+                System.out.println("coord = " + coord);
+                currentCoord = coord;
+                for (int i = 0; i < usedEdges.size(); i++) {
+                    currentEdge = usedEdges.get(i);
+                    System.out.println("перебираем грани,счётчик =  " + i);
+                    LinkedList<Edge> sutableEdges = findSutableEdges(usedEdges, currentCoord);
+                    for (Edge e : sutableEdges) {
+                        if (currentCoord.equals(currentEdge.getStart())) {
+                            System.out.println("test1");
+                            currentRoute.add(currentEdge);
+                            routes.add(currentRoute);
+                            currentCoord = currentEdge.getTarget();
+                            if (currentEdge.getTarget().equals(g.getStok().getCoord())) {
+                                System.out.println("test2");
+                                currentRoute = new LinkedList<>();
+                            }
+                        }
+                    }
                 }
             }
         }
-
+        for (Edge edge : usedEdges) {
+            System.out.println("Грань 2 " + edge);
+        }
         maximumFlow = routes.size();
         System.out.println("Количество путей = " + routes.size());
 //        int crosses = checkRoutes(routes);
@@ -216,6 +232,16 @@ public class Game {
             maximumFlow = sourceNode.getOutLeadingOrder();
         }
         return maximumFlow;
+    }
+
+    private static LinkedList<Edge> findSutableEdges(LinkedList<Edge> usedEdges, Coord currentCoord) {
+        LinkedList<Edge> sutableEdges = new LinkedList<>();
+        for(Edge edge : usedEdges){
+            if(edge.getStart().equals(currentCoord)){
+                sutableEdges.add(edge);
+            }
+        }
+        return sutableEdges;
     }
 
     private static int checkRoutes(List<LinkedList<Edge>> routes) {
