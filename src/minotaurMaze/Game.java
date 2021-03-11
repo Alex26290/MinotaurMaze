@@ -199,17 +199,22 @@ public class Game {
                 for (int i = 0; i < usedEdges.size(); i++) {
                     currentEdge = usedEdges.get(i);
                     System.out.println("перебираем грани,счётчик =  " + i);
-                    LinkedList<Edge> sutableEdges = findSutableEdges(usedEdges, currentCoord);
-                    for (Edge e : sutableEdges) {
+                    if (!currentEdge.getTarget().equals(g.getStok().getCoord())) {
                         if (currentCoord.equals(currentEdge.getStart())) {
+                            currentRoute.add(currentEdge);
                             System.out.println("test1");
                             currentRoute.add(currentEdge);
-                            routes.add(currentRoute);
                             currentCoord = currentEdge.getTarget();
-                            if (currentEdge.getTarget().equals(g.getStok().getCoord())) {
-                                System.out.println("test2");
-                                currentRoute = new LinkedList<>();
-                            }
+                            currentRoute = new LinkedList<>();
+                            routes.add(currentRoute);
+                        }
+                    } else if (currentEdge.getTarget().equals(g.getStok().getCoord())) {
+                        if (currentCoord.equals(currentEdge.getStart())) {
+                            currentCoord = currentEdge.getTarget();
+                            currentRoute.add(currentEdge);
+                            System.out.println("test2");
+                            routes.add(currentRoute);
+                            currentRoute = new LinkedList<>();
                         }
                     }
                 }
@@ -234,14 +239,14 @@ public class Game {
         return maximumFlow;
     }
 
-    private static LinkedList<Edge> findSutableEdges(LinkedList<Edge> usedEdges, Coord currentCoord) {
-        LinkedList<Edge> sutableEdges = new LinkedList<>();
-        for(Edge edge : usedEdges){
-            if(edge.getStart().equals(currentCoord)){
-                sutableEdges.add(edge);
+    private static boolean hasNextEdge(Coord start, LinkedList<Edge> usedEdges) {
+        boolean hasNextEdge = false;
+        for (Edge edge : usedEdges) {
+            if (edge.getStart().equals(start)) {
+                hasNextEdge = true;
             }
         }
-        return sutableEdges;
+        return hasNextEdge;
     }
 
     private static int checkRoutes(List<LinkedList<Edge>> routes) {
@@ -321,7 +326,7 @@ public class Game {
                     if (e.getStart().equals(coord)
                             && !parent.containsKey(e.getTarget())
                             && !(visited.contains(e.getStart()) || visited.contains(e.getTarget()))
-                            && flow.get(e) <= e.getCapacity()) {
+                            && flow.get(e) < e.getCapacity()) {
                         System.out.println("Test Point 3");
                         parent.put(e.getStart(), e);
                         parent.put(e.getTarget(), e);
@@ -335,7 +340,7 @@ public class Game {
                     } else if (e.getTarget().equals(coord)
                             && !parent.containsKey(e.getStart())
                             && !(visited.contains(e.getStart()) || visited.contains(e.getTarget()))
-                            && flow.get(e) >= 0) {
+                            && flow.get(e) > 0) {
                         parent.put(e.getStart(), e);
                         parent.put(e.getTarget(), e);
                         if (e.getStart().equals(target)) {
