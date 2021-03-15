@@ -8,24 +8,22 @@ package minotaurMaze;
 import fordfulcerson.Edge;
 import fordfulcerson.Graph;
 import fordfulcerson.Node;
-
-import javax.management.ListenerNotFoundException;
 import java.util.*;
 
 /**
  * @author DNS
  */
-public class Game {
+public class TestMaze{
     Cell cell = new Cell();
 
     public static List<Coord> visited = new ArrayList<>();
     public static List<Coord> visitedCoords = new ArrayList<>();
 
-    public Game(int cols, int rows) {
+    public TestMaze(int cols, int rows) {
         Ranges.setSize(new Coord(cols, rows));
     }
 
-    public void start() {
+    public void startNewMaze() {
         System.out.println("Построен новый лабиринт");
         cell.start();
         Graph g = cell.createGraphFromCoords();
@@ -34,9 +32,18 @@ public class Game {
             System.out.println("Поток = 0, минотавр находится у края лабиринта");
         } else {
             LinkedHashMap<Edge, Integer> flow = getMaxFlow(g, g.getIstok().getCoord(), g.getStok().getCoord());
-            System.out.println("\n");
-            System.out.println("flow = " + flow);
-            System.out.println("Поток = " + getFlowSize2(flow, g, g.getIstok().getCoord()));
+            System.out.println("Поток = " + getFlowSize(flow, g, g.getIstok().getCoord()));
+        }
+    }
+    public void startMaze() {
+        System.out.println("Построен новый лабиринт");
+        Graph g = cell.createGraphFromCoords();
+
+        if (g.getIstok().getCoord().isExtreme) {
+            System.out.println("Поток = 0, минотавр находится у края лабиринта");
+        } else {
+            LinkedHashMap<Edge, Integer> flow = getMaxFlow(g, g.getIstok().getCoord(), g.getStok().getCoord());
+            System.out.println("Поток = " + getFlowSize(flow, g, g.getIstok().getCoord()));
         }
     }
 
@@ -66,19 +73,15 @@ public class Game {
             }
         }
 
-        // The Algorithm itself
+        // Алгоритм нахождения максимального потока
         while ((path = bfs(g, source, sink, flow)) != null) {
             System.out.println("path = " + path);
-            // Activating this output will illustrate how the algorithm works
-            // Find out the flow that can be sent on the found path.
+            // Нахождение потока
             int minCapacity = Integer.MAX_VALUE;
             Coord lastNode = source;
             for (Edge edge : path) {
                 int c = 0;
-                // Although the edges are directed they can be used in both
-                // directions if the capacity is partially used, so this if
-                // statement is necessary to find out the edge's actual
-                // direction.
+//Условие для нахождения действительного направления граней
                 if (edge.getStart().equals(lastNode)) {
                     c = edge.getCapacity() - flow.get(edge);
                     lastNode = edge.getTarget();
@@ -91,11 +94,9 @@ public class Game {
                 }
             }
 
-            // Change flow of all edges of the path by the value calculated
-            // above.
+//Изменяем поток всех граней пути в соответствии со значением, рассчитанным выше
             lastNode = source;
             for (Edge edge : path) {
-                // If statement like above
                 if (edge.getStart().equals(lastNode)) {
                     flow.put(edge, flow.get(edge) + minCapacity);
                     lastNode = edge.getTarget();
@@ -108,60 +109,11 @@ public class Game {
         return (LinkedHashMap<Edge, Integer>) flow;
     }
 
-    /**
-     * This method gives the actual flow value by adding all flow values of the
-     * out leading edges of the source.
-     *
-     * @param flow   A HashMap of the form like getMaxFlow produces them
-     * @param g      The directed Graph
-     * @param source The object identifying the source node of the flow
-     * @return The value of the given flow
-     */
     static int getFlowSize(LinkedHashMap<Edge, Integer> flow, Graph g,
-                           Coord source) {
-        HashMap<Coord, Integer> currentFlow = new HashMap<>();
-        Node sourceNode = g.getNode(source.toString());
-        System.out.println("Количество рёбер из истока =  " + sourceNode.getOutLeadingOrder());
-        System.out.println("flow = " + flow);
-        List<LinkedList<Edge>> routes = new LinkedList<>();
-        LinkedList<Edge> currentRoute = new LinkedList<>();
-        Map<Integer, Integer> map = new HashMap<>();
-        int maximumFlow = 0;
-        for (Map.Entry entry : flow.entrySet()) {
-            Edge edge = (Edge) entry.getKey();
-            currentFlow.put(edge.getStart(), 1);
-            currentRoute.add(edge);
-//            if(currentRoute.size()==1 && currentFlow.containsKey(edge.getStart())) {
-            if (edge.getTarget().equals(g.getStok().getCoord())) {
-                routes.add(currentRoute);
-                currentRoute = new LinkedList<>();
-                currentFlow = new HashMap<>();
-//                isNewRoute = true;
-            }
-        }
-//        }
-        maximumFlow = routes.size();
-        System.out.println("Количество путей = " + routes.size());
-//        int crosses = checkRoutes(routes);
-        for (LinkedList<Edge> list : routes) {
-            System.out.println("Путь: ");
-            for (Edge edge : list) {
-                System.out.println(edge);
-            }
-            System.out.println("\n");
-        }
-//        if (maximumFlow > sourceNode.getOutLeadingOrder()) {
-//            maximumFlow = sourceNode.getOutLeadingOrder();
-//        }
-        return maximumFlow;
-    }
-
-    static int getFlowSize2(LinkedHashMap<Edge, Integer> flow, Graph g,
                             Coord source) {
         HashMap<Coord, Integer> currentFlow = new HashMap<>();
         Node sourceNode = g.getNode(source.toString());
-        System.out.println("Количество рёбер из истока =  " + sourceNode.getOutLeadingOrder());
-        System.out.println("flow = " + flow);
+
         List<LinkedList<Edge>> routes = new LinkedList<>();
         LinkedList<Edge> currentRoute = new LinkedList<>();
         LinkedList<Edge> usedEdges = new LinkedList<>();
@@ -170,39 +122,18 @@ public class Game {
         Edge currentEdge = null;
         for (Map.Entry entry : flow.entrySet()) {
             Edge nextEdge = (Edge) entry.getKey();
-//            if (currentEdge == null) {
-//                currentRoute.add(nextEdge);
-//                currentEdge = nextEdge;
-//            } else if (currentEdge != nextEdge && nextEdge.getStart().equals(currentEdge.getTarget())) {
-//                currentRoute.add(nextEdge);
-////                if (!Ranges.getCoordsAround(source).contains(nextEdge.getStart())) {
-//                    visitedCoords.add(nextEdge.getStart());
-////                }
-//                currentEdge = nextEdge;
-//                if (nextEdge.getTarget().equals(g.getStok().getCoord())) {
-//                    routes.add(currentRoute);
-//                    currentRoute = new LinkedList<>();
-//                }
-//            } else {
             usedEdges.add(nextEdge);
-        }
-//        }
-        for (Edge edge : usedEdges) {
-            System.out.println("Грань " + edge);
         }
         currentRoute = new LinkedList<>();
         Coord currentCoord;
         for (Coord coord : Ranges.getCoordsAround(source)) {
             if (Cell.cellMap.get(coord) == Box.OPENED) {
-                System.out.println("coord = " + coord);
                 currentCoord = coord;
                 for (int i = 0; i < usedEdges.size(); i++) {
                     currentEdge = usedEdges.get(i);
-                    System.out.println("перебираем грани,счётчик =  " + i);
                     if (!currentEdge.getTarget().equals(g.getStok().getCoord())) {
                         if (currentCoord.equals(currentEdge.getStart())) {
                             currentRoute.add(currentEdge);
-                            System.out.println("test1");
                             currentRoute.add(currentEdge);
                             currentCoord = currentEdge.getTarget();
                             currentRoute = new LinkedList<>();
@@ -220,14 +151,9 @@ public class Game {
                 }
             }
         }
-        for (Edge edge : usedEdges) {
-            System.out.println("Грань 2 " + edge);
-        }
         maximumFlow = routes.size();
-        System.out.println("Количество путей = " + routes.size());
 //        int crosses = checkRoutes(routes);
         for (LinkedList<Edge> list : routes) {
-            System.out.println("Путь: ");
             for (Edge edge : list) {
                 System.out.println(edge);
             }
@@ -280,20 +206,6 @@ public class Game {
         return countOfCrosses;
     }
 
-    /**
-     * Simple breadth first search in the directed graph
-     *
-     * @param g      The directed Graph
-     * @param start  The object that identifying the start node of the search
-     * @param target The object that identifying the target node of the search
-     * @param flow   A HashMap of the form like getMaxFlow produces them. If an
-     *               edge has a value > 0 in it, it will also be used in the
-     *               opposite direction. Also edges that have a value equal to its
-     *               capacity will be ignored.
-     * @return A list of all edges of the found path in the order in which they
-     * are used, null if there is no path. If the start node equals the
-     * target node, an empty list is returned.
-     */
     static LinkedList<Edge> bfs(Graph g, Coord start, Coord target,
                                 HashMap<Edge, Integer> flow) {
         // The edge by which a node was reached.
@@ -373,7 +285,7 @@ public class Game {
                 node = e.getStart();
             }
         }
-        // Return the path.
+        // Возвращаем путь
         return path;
     }
 }

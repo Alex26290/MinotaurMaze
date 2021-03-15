@@ -17,7 +17,6 @@ public class Ranges {
     public static ArrayList<Coord> allCoords;
     private static Random random = new Random();
 
-    //метод, устанавливающий размер для матрицы
     static void setSize(Coord _size) {
         size = _size;
         allCoords = new ArrayList<>();

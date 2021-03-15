@@ -5,7 +5,6 @@ import minotaurMaze.Coord;
 import java.util.*;
 
 public class Graph {
-//    private Map<Coord, List<Node>> nodes = new LinkedHashMap<>();
     private Map<String, Node> nodes = new HashMap<>();
     private Node istok;
     private Node stok;
@@ -43,10 +42,6 @@ public class Graph {
 
     public void setStok(Node stok) {
         this.stok = stok;
-    }
-
-    public void setEdges(LinkedList<Edge> edges) {
-        this.edges = edges;
     }
 
     public Node getNode(String coord) {

@@ -19,10 +19,6 @@ public class Coord {
         this.y = y;
     }
 
-    public Coord() {
-
-    }
-
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -30,21 +26,6 @@ public class Coord {
         Coord coord = (Coord) o;
         return x == coord.x && y == coord.y;
     }
-
-//    static ArrayList<Coord> getCoordsAround(Coord coord) {
-//        Coord around;
-//        ArrayList<Coord> list = new ArrayList<Coord>();
-//        for (int x = coord.x - 1; x <= coord.x + 1; x++) {
-//            for (int y = coord.y - 1; y <= coord.y + 1; y++) {
-//                if (inRange(around = new Coord(x, y))) {
-//                    if (!around.equals(coord)) {
-//                        list.add(around);
-//                    }
-//                }
-//            }
-//        }
-//        return list;
-//    }
 
     public boolean isExtreme() {
         return isExtreme;

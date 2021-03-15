@@ -13,10 +13,6 @@ class Matrix {
 
     private Box[][] matrix;
 
-    public Matrix(Box[][] matrix) {
-        this.matrix = matrix;
-    }
-
     public Matrix(Box defaultBox) {
         matrix = new Box[Ranges.getSize().x][Ranges.getSize().y];
         for (Coord coord : Ranges.getAllCoords()) {

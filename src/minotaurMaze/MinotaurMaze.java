@@ -8,6 +8,8 @@ package minotaurMaze;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Image;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import javax.swing.ImageIcon;
@@ -24,7 +26,7 @@ class MinotaurMaze extends JFrame {
     /**
      * @param args the command line arguments
      */
-    private Game game;
+    private TestMaze testMaze;
     private JPanel panel;
 
     private final int COLS = 5;
@@ -36,8 +38,8 @@ class MinotaurMaze extends JFrame {
     }
 
     private MinotaurMaze() {
-        game = new Game(COLS, ROWS);
-        game.start();
+        testMaze = new TestMaze(COLS, ROWS);
+        testMaze.startNewMaze();
         setImages();
         initPanel();
         initFrame();
@@ -49,7 +51,7 @@ class MinotaurMaze extends JFrame {
             protected void paintComponent(Graphics g) {
                 super.paintComponent(g);
                 for (Coord coord : Ranges.getAllCoords()) {
-                    g.drawImage((Image) game.getBox(coord).image, coord.x * IMAGES_SIZE, coord.y * IMAGES_SIZE, this);
+                    g.drawImage((Image) testMaze.getBox(coord).image, coord.x * IMAGES_SIZE, coord.y * IMAGES_SIZE, this);
                 }
             }
         };
@@ -60,13 +62,23 @@ class MinotaurMaze extends JFrame {
                 int y = e.getY() / IMAGES_SIZE;
                 Coord coord = new Coord(x, y);
                 if (e.getButton() == MouseEvent.BUTTON1) {
-                    game.pressLeftButton(coord);
+                    testMaze.pressLeftButton(coord);
                 }
                 if (e.getButton() == MouseEvent.BUTTON3) {
-                    game.pressRightButton(coord);
+                    testMaze.pressRightButton(coord);
                 }
                 if (e.getButton() == MouseEvent.BUTTON2) {
-                    game.start();
+                    testMaze.startNewMaze();
+                }
+                panel.repaint();
+            }
+        });
+        addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyPressed(KeyEvent e) {
+                if(e.getKeyCode() == KeyEvent.VK_ENTER){
+                    System.out.println("Нажат энтер");
+                    testMaze.startMaze();
                 }
                 panel.repaint();
             }
