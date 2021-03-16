@@ -3,6 +3,7 @@ package minotaurMaze;
 import fordfulcerson.Edge;
 import fordfulcerson.Graph;
 import fordfulcerson.Node;
+import org.w3c.dom.ls.LSOutput;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -63,7 +64,6 @@ public class Cell {
         for (Coord coord : coords) {
             if (cellMap.get(coord) == Box.MINO) {
                 visitedNodes.add(coord);
-                System.out.println("Найден исток, координата = " + coord);
                 addNodeIntoGraph(graph, coord);
                 ArrayList<Coord> coordsAround = Ranges.getCoordsAround(coord);
                 if (coordsAround.size() != 4) {
@@ -73,73 +73,140 @@ public class Cell {
                 for (Coord coord2 : coordsAround) {
                     if (nodesInGraph.contains(coord2)) {
                         visitedNodes.add(coord2);
-                        System.out.println("Добавляем ребро для истока");
-                        Edge edge = graph.addEdge(coord, coord2,1);
+                        Edge edge = graph.addEdge(coord, coord2, 1);
                         graph.getNode(coord.toString()).addEdge(edge);
+                        Node node = graph.getNode(coord2.toString());
+                        if (!node.hasEdge(coord2, coord, 1)) {
+                            System.out.println("!!!!Новая грань");
+                            node.addEdge(edge);
+                        }
                     }
                 }
-                for (Coord coord2 : coordsAround) {
-                    if (nodesInGraph.contains(coord2)) {
-                        createEdgesForCoords(graph, coord2);
+
+                List<Coord> coordsAroundBasis = findNewListOfAroundCoords(graph, coordsAround);
+                for (Coord coord1 : coordsAroundBasis) {
+                    System.out.println("Координата в списке вокруг базисных " + coord1);
+                }
+                while (!isEdgesCreatedForAllCoords(coordsAroundBasis)) {
+                    List<Coord> newCoordsAround = findNewListOfAroundCoords(graph, coordsAroundBasis);
+                    coordsAroundBasis = newCoordsAround;
+                    for (Coord coord1 : newCoordsAround) {
+                        System.out.println("Координата в списке " + coord1);
                     }
+//                System.out.println("isEdgesCreatedForAllNodesAround = " + isEdgesCreatedForAllCoords(newCoordsAround));
                 }
             }
         }
         return graph;
     }
 
-    private void addNodesIntoGraph(Graph graph, List<Coord> coords) {
-        for (Coord coord : coords) {
-            if (cellMap.get(coord) == Box.OPENED) {
-                addNodeIntoGraph(graph, coord);
+    private List<Coord> findNewListOfAroundCoords(Graph graph, List<Coord> coordsAround) {
+        List<Coord> newCoordsAround = new ArrayList<>();
+        for (Coord coord2 : coordsAround) {
+            System.out.println("test1, coord 2 = " + coord2);
+            if (nodesInGraph.contains(coord2)) {
+                System.out.println("test2");
+                ArrayList<Coord> coordsAroundCurrent = Ranges.getCoordsAround(coord2);
+                if (coordsAroundCurrent.size() != 4) {
+                    System.out.println("Создаём грань к стоку");
+                    Edge edge = graph.addEdge(coord2, graph.getStok().getCoord(), 1);
+                    graph.getNode(coord2.toString()).addEdge(edge);
+                } else {
+                    for (Coord c : coordsAroundCurrent) {
+                        System.out.println("test3");
+                        if (nodesInGraph.contains(c)) {
+                            System.out.println("test4");
+                            if (!visitedNodes.contains(c)) {
+                                System.out.println("test5");
+                                Edge edge = graph.addEdge(coord2, c, 1);
+                                graph.getNode(coord2.toString()).addEdge(edge);
+                                Node node = graph.getNode(c.toString());
+                                if (!node.hasEdge(c, coord2, 1)) {
+                                    node.addEdge(edge);
+                                }
+                                if (!newCoordsAround.contains(c)) {
+                                    System.out.println("Test6");
+//                                visitedNodes.add(c);
+                                    newCoordsAround.add(c);
+                                }
+                            }
+                        }
+//                    } else if (!graph.hasEdge(c, coord2, 1)) {
+//                        if (nodesInGraph.contains(c)) {
+//                            System.out.println("test10");
+//                            Edge edge = graph.addEdge(c, coord2, 1);
+//                            graph.getNode(c.toString()).addEdge(edge);
+//                        }
+//                    }
+                    }
+                }
+                }
+                visitedNodes.add(coord2);
             }
+            return newCoordsAround;
         }
-    }
 
-    public void addStokNodeIntoGraph(Graph graph) {
-        Coord stok = new Coord(-1, -1);
-        graph.setStok(new Node(stok));
-        addNodeIntoGraph(graph, stok);
-    }
-
-    public void createEdgesForCoords(Graph graph, Coord coord) {
-        System.out.println("Создаём связи для нода с координатами " + coord);
-        ArrayList<Coord> coordsAround = Ranges.getCoordsAround(coord);
-        int coordsAroundSize = coordsAround.size();
-        if (coordsAroundSize == 4) {
-            System.out.println("У нода с координатой " + coord + " 4 клетки вокруг");
-            for (Coord coord2 : coordsAround) {
-                if (nodesInGraph.contains(coord2) && !visitedNodes.contains(coord2)) {
-                    Edge edge = graph.addEdge(coord, coord2,1);
-                    Node node = graph.getNode(coord.toString());
-                    if (node != null) {
-                        node.addEdge(edge);
+        private boolean isEdgesCreatedForAllCoords (List < Coord > newCoordsAround) {
+            boolean allCreated = true;
+            for (Coord coord : newCoordsAround) {
+                if (nodesInGraph.contains(coord)) {
+                    if (!visitedNodes.contains(coord)) {
+                        allCreated = false;
                     }
                 }
             }
-            for (Coord coord2 : coordsAround) {
-                if (nodesInGraph.contains(coord2) && !visitedNodes.contains(coord2)) {
-                    visitedNodes.add(coord2);
-                    createEdgesForCoords(graph, coord2);
+            return allCreated;
+        }
+
+        private void addNodesIntoGraph (Graph graph, List < Coord > coords){
+            for (Coord coord : coords) {
+                if (cellMap.get(coord) == Box.OPENED) {
+                    addNodeIntoGraph(graph, coord);
                 }
-            }
-        } else {
-            if (nodesInGraph.contains(coord)) {
-                createStokEdgeForCoord(graph, coord);
             }
         }
 
-    }
+        public void addStokNodeIntoGraph (Graph graph){
+            Coord stok = new Coord(-1, -1);
+            graph.setStok(new Node(stok));
+            addNodeIntoGraph(graph, stok);
+        }
 
-    private void createStokEdgeForCoord(Graph graph, Coord coord) {
-            System.out.println("Создаём связь от вершины к стоку");
-            Edge edge = graph.addEdge(coord, graph.getStok().getCoord(),1);
+        public void createEdgesForCoords (Graph graph, Coord coord){
+            ArrayList<Coord> coordsAround = Ranges.getCoordsAround(coord);
+            int coordsAroundSize = coordsAround.size();
+            if (coordsAroundSize == 4) {
+                for (Coord coord2 : coordsAround) {
+                    if (nodesInGraph.contains(coord2) && !visitedNodes.contains(coord2)) {
+                        Edge edge = graph.addEdge(coord, coord2, 1);
+                        Node node = graph.getNode(coord.toString());
+                        if (node != null) {
+                            node.addEdge(edge);
+                        }
+                    }
+                }
+                for (Coord coord2 : coordsAround) {
+                    if (nodesInGraph.contains(coord2) && !visitedNodes.contains(coord2)) {
+                        visitedNodes.add(coord2);
+                        createEdgesForCoords(graph, coord2);
+                    }
+                }
+            } else {
+                if (nodesInGraph.contains(coord)) {
+                    createStokEdgeForCoord(graph, coord);
+                }
+            }
+
+        }
+
+        private void createStokEdgeForCoord (Graph graph, Coord coord){
+            Edge edge = graph.addEdge(coord, graph.getStok().getCoord(), 1);
             Node node = graph.getNode(coord.toString());
             node.addEdge(edge);
-    }
+        }
 
-    public void addNodeIntoGraph(Graph graph, Coord coord) {
-        graph.addNode(coord);
-        nodesInGraph.add(coord);
+        public void addNodeIntoGraph (Graph graph, Coord coord){
+            graph.addNode(coord);
+            nodesInGraph.add(coord);
+        }
     }
-}

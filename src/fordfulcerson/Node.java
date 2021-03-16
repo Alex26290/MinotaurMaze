@@ -37,6 +37,16 @@ public int getOutLeadingOrder() {
         return this.edges.size();
     }
 
+    public boolean hasEdge(Coord coord, Coord coord2, int i) {
+        boolean hasEdge = false;
+        for(Edge edge : this.edges){
+            if(edge.getStart().equals(coord) && edge.getTarget().equals(coord2)){
+                hasEdge = true;
+            }
+        }
+        return hasEdge;
+    }
+
     public Coord getCoord() {
         return coord;
     }

@@ -29,11 +29,16 @@ public class TestMaze {
         cell.start();
         Graph g = cell.createGraphFromCoords();
 
+       Map<String, Node> map = g.getNodes();
+       for(Map.Entry entry : map.entrySet()){
+           Node node = (Node) entry.getValue();
+           System.out.println("Координата вершины - " + node.getCoord() + " outputleadingOrder = " + node.getOutLeadingOrder());
+       }
         if (g.getIstok().getCoord().isExtreme) {
             System.out.println("Поток = 0, минотавр находится у края лабиринта");
+            maxFlow = 0;
         } else {
             LinkedHashMap<Edge, Integer> flow = getMaxFlow(g, g.getIstok().getCoord(), g.getStok().getCoord());
-//            System.out.println("Поток = " + getFlowSize(flow, g, g.getIstok().getCoord()));
             System.out.println("Поток = " + maxFlow);
             maxFlow = 0;
         }
@@ -148,7 +153,6 @@ public class TestMaze {
                             && flow.get(e) < e.getCapacity()) {
                         parent.put(e.getTarget(), e);
                         if (e.getTarget().equals(target)) {
-//                            break;
                             break all;
                         }
                         newFringe.add(e.getTarget());
@@ -157,7 +161,6 @@ public class TestMaze {
                             && flow.get(e) > 0) {
                         parent.put(e.getStart(), e);
                         if (e.getStart().equals(target)) {
-//                            break;
                             break all;
                         }
                         newFringe.add(e.getStart());
@@ -169,7 +172,9 @@ public class TestMaze {
         }
 
         // Return null, if no path was found.
-        if (fringe.isEmpty()) {
+        if (!fringe.isEmpty()) {
+            System.out.println("fringe  = " + fringe );
+        } else{
             return null;
         }
         // If a path was found, reconstruct it.

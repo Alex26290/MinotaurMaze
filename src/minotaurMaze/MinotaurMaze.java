@@ -78,7 +78,7 @@ class MinotaurMaze extends JFrame {
             public void keyPressed(KeyEvent e) {
                 if(e.getKeyCode() == KeyEvent.VK_ENTER){
                     System.out.println("Нажат энтер");
-                    testMaze.startMaze();
+                    testMaze.startNewMaze();
                 }
                 panel.repaint();
             }

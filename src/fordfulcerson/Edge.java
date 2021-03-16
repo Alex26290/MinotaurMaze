@@ -13,7 +13,7 @@ public class Edge {
     private final Coord start;
     private int capacity;
 
-    Edge(Coord start, Coord target, int capacity) {
+    public Edge(Coord start, Coord target, int capacity) {
         this.start = start;
         this.target = target;
         this.capacity = capacity;
