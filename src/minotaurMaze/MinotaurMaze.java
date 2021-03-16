@@ -29,8 +29,8 @@ class MinotaurMaze extends JFrame {
     private TestMaze testMaze;
     private JPanel panel;
 
-    private final int COLS = 5;
-    private final int ROWS = 5;
+    private final int COLS = 6;
+    private final int ROWS = 6;
     private final int IMAGES_SIZE = 50;
 
     public static void main(String[] args) {
@@ -78,7 +78,7 @@ class MinotaurMaze extends JFrame {
             public void keyPressed(KeyEvent e) {
                 if(e.getKeyCode() == KeyEvent.VK_ENTER){
                     System.out.println("Нажат энтер");
-                    testMaze.startNewMaze();
+                    testMaze.startMaze();
                 }
                 panel.repaint();
             }

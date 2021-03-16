@@ -16,10 +16,10 @@ public class Cell {
 
     void start() {
         cellMap = new Matrix(Box.OPENED);
-        for (int j = 0; j < 11; j++) {
+        for (int j = 0; j < 8; j++) {
             Coord coord = Ranges.getRandomCoord();
             cellMap.set(coord, Box.CLOSED);
-            if (j == 10) {
+            if (j == 7) {
                 cellMap.set(coord, Box.MINO);
             }
         }
@@ -131,13 +131,6 @@ public class Cell {
                                 }
                             }
                         }
-//                    } else if (!graph.hasEdge(c, coord2, 1)) {
-//                        if (nodesInGraph.contains(c)) {
-//                            System.out.println("test10");
-//                            Edge edge = graph.addEdge(c, coord2, 1);
-//                            graph.getNode(c.toString()).addEdge(edge);
-//                        }
-//                    }
                     }
                 }
                 }

@@ -23,6 +23,9 @@ public class Node {
     public void addEdge(Edge edge) {
         this.edges.add(edge);
     }
+    public void removeEdge(Edge edge) {
+        this.edges.remove(edge);
+    }
 
 //Получить ребро по числовому значению
 public Edge getEdge(int number) {
