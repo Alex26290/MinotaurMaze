@@ -17,7 +17,6 @@ public class Graph {
 
     public Edge addEdge(Coord istok, Coord stok, int capacity) {
         Edge edge = new Edge(istok, stok, capacity);
-        System.out.println("Новая грань = " + edge);
         if (!this.edges.contains(edge)) {
             this.edges.add(edge);
         }

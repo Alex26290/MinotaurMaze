@@ -27,146 +27,73 @@ public class TestMaze {
     }
 
     public void startNewMaze() {
-        System.out.println("Построен новый лабиринт");
         cell.start();
-        Graph g = cell.createGraphFromCoords();
-
-        Map<String, Node> map = g.getNodes();
-        for (Map.Entry entry : map.entrySet()) {
-            Node node = (Node) entry.getValue();
-            System.out.println("Координата вершины - " + node.getCoord() + " outputleadingOrder = " + node.getOutLeadingOrder());
-        }
-        if (g.getIstok().getCoord().isExtreme) {
-            System.out.println("Поток = 0, минотавр находится у края лабиринта");
-            maxFlow = 0;
-        } else {
-            LinkedHashMap<Edge, Integer> flow = getMaxFlow(g, g.getIstok().getCoord(), g.getStok().getCoord());
-            System.out.println("Поток1 = " + maxFlow);
-            List<Coord> visited = new ArrayList<>();
-            List<Edge> list = g.getEdges();
-            for (Map.Entry entry : g.getNodes().entrySet()) {
-                Node node = (Node) entry.getValue();
-                System.out.println("Координата = " + node.getCoord() + " ,outLeadOrder = " + node.getOutLeadingOrder());
-            }
-            for (Map.Entry entry : flow.entrySet()) {
-                Edge edge = (Edge) entry.getKey();
-                Coord start = edge.getStart();
-                Coord target = edge.getTarget();
-                g.getNode(start.toString()).removeEdge(edge);
-//                g.getNode(target.toString()).removeEdge(edge);
-                if (passedPathes.contains(edge)) {
-                    list.remove(edge);
-                    visited.add(target);
-                }
-            }
-            for (Map.Entry entry : flow.entrySet()) {
-                Edge edge = (Edge) entry.getKey();
-                Coord start = edge.getStart();
-                Coord target = edge.getTarget();
-                if (visited.contains(start)) {
-                    list.remove(edge);
-                    g.getNode(start.toString()).removeEdge(edge);
-//                    g.getNode(target.toString()).removeEdge(edge);
-                }
-            }
-            for (int i = 0; i < 2; i++) {
-                List<Edge> path = new LinkedList<>();
-                Coord start = null;
-                for (Edge e : g.getEdges()) {
-                    System.out.println("Грань - " + e);
-                    if (path.size() == 0) {
-                        if (e.getStart().equals(g.getIstok().getCoord())) {
-                            start = e.getTarget();
-                            path.add(e);
-                        }
-                    } else {
-                        if (e.getStart().equals(start)) {
-                            start = e.getTarget();
-                            path.add(e);
-                            if (e.getTarget().equals(g.getStok().getCoord())) {
-                                maxFlow++;
-                                break;
-                            }
-                        }
-                    }
-                }
-                System.out.println("path = " + path);
-                for (Edge e : path) {
-                    list.remove(e);
-                    g.getNode(start.toString()).removeEdge(e);
-                }
-            }
-            System.out.println("Поток2 = " + maxFlow);
-            maxFlow = 0;
-        }
+        startMaze();
     }
 
     public void startMaze() {
         System.out.println("Построен новый лабиринт");
         Graph g = cell.createGraphFromCoords();
-
-        if (g.getIstok().getCoord().isExtreme) {
-            System.out.println("Поток = 0, минотавр находится у края лабиринта");
+        if (g.getIstok() != null) {
+            if (g.getIstok().getCoord().isExtreme) {
+                System.out.println("Поток = 0, минотавр находится у края лабиринта");
+            } else {
+                getMaxFlowSize(g);
+            }
         } else {
-            LinkedHashMap<Edge, Integer> flow = getMaxFlow(g, g.getIstok().getCoord(), g.getStok().getCoord());
-            System.out.println("Поток1 = " + maxFlow);
-            List<Coord> visited = new ArrayList<>();
-            List<Edge> list = g.getEdges();
-            for (Map.Entry entry : g.getNodes().entrySet()) {
-                Node node = (Node) entry.getValue();
-                System.out.println("Координата = " + node.getCoord() + " ,outLeadOrder = " + node.getOutLeadingOrder());
+            System.out.println("Не установлена иконка минотавра");
+        }
+    }
+
+    public void getMaxFlowSize(Graph g) {
+        LinkedHashMap<Edge, Integer> flow = getMaxFlow(g, g.getIstok().getCoord(), g.getStok().getCoord());
+        List<Coord> visited = new ArrayList<>();
+        List<Edge> list = g.getEdges();
+        for (Map.Entry entry : flow.entrySet()) {
+            Edge edge = (Edge) entry.getKey();
+            Coord start = edge.getStart();
+            Coord target = edge.getTarget();
+            g.getNode(start.toString()).removeEdge(edge);
+            if (passedPathes.contains(edge)) {
+                list.remove(edge);
+                visited.add(target);
             }
-            for (Map.Entry entry : flow.entrySet()) {
-                Edge edge = (Edge) entry.getKey();
-                Coord start = edge.getStart();
-                Coord target = edge.getTarget();
+        }
+        for (Map.Entry entry : flow.entrySet()) {
+            Edge edge = (Edge) entry.getKey();
+            Coord start = edge.getStart();
+            if (visited.contains(start)) {
+                list.remove(edge);
                 g.getNode(start.toString()).removeEdge(edge);
-//                g.getNode(target.toString()).removeEdge(edge);
-                if (passedPathes.contains(edge)) {
-                    list.remove(edge);
-                    visited.add(target);
-                }
             }
-            for (Map.Entry entry : flow.entrySet()) {
-                Edge edge = (Edge) entry.getKey();
-                Coord start = edge.getStart();
-                Coord target = edge.getTarget();
-                if (visited.contains(start)) {
-                    list.remove(edge);
-                    g.getNode(start.toString()).removeEdge(edge);
-//                    g.getNode(target.toString()).removeEdge(edge);
-                }
-            }
-            for (int i = 0; i < 2; i++) {
-                List<Edge> path = new LinkedList<>();
-                Coord start = null;
-                for (Edge e : g.getEdges()) {
-                    System.out.println("Грань - " + e);
-                    if (path.size() == 0) {
-                        if (e.getStart().equals(g.getIstok().getCoord())) {
-                            start = e.getTarget();
-                            path.add(e);
-                        }
-                    } else {
-                        if (e.getStart().equals(start)) {
-                            start = e.getTarget();
-                            path.add(e);
-                            if (e.getTarget().equals(g.getStok().getCoord())) {
-                                maxFlow++;
-                                break;
-                            }
+        }
+        for (int i = 0; i < 2; i++) {
+            List<Edge> path = new LinkedList<>();
+            Coord start = null;
+            for (Edge e : g.getEdges()) {
+                if (path.size() == 0) {
+                    if (e.getStart().equals(g.getIstok().getCoord())) {
+                        start = e.getTarget();
+                        path.add(e);
+                    }
+                } else {
+                    if (e.getStart().equals(start)) {
+                        start = e.getTarget();
+                        path.add(e);
+                        if (e.getTarget().equals(g.getStok().getCoord())) {
+                            maxFlow++;
+                            break;
                         }
                     }
                 }
-                System.out.println("path = " + path);
-                for (Edge e : path) {
-                    list.remove(e);
-                    g.getNode(start.toString()).removeEdge(e);
-                }
             }
-            System.out.println("Поток2 = " + maxFlow);
-            maxFlow = 0;
+            for (Edge e : path) {
+                list.remove(e);
+                g.getNode(start.toString()).removeEdge(e);
+            }
         }
+        System.out.println("Поток = " + maxFlow);
+        maxFlow = 0;
     }
 
     public Box getBox(Coord coord) {
@@ -195,10 +122,8 @@ public class TestMaze {
         }
 
         // The Algorithm itself
-        System.out.println("flow = " + flow);
         while ((path = bfs(g, source, sink, flow)) != null) {
             maxFlow++;
-            System.out.println("path = " + path);
             passedPathes.addAll(path);
             // Activating this output will illustrate how the algorithm works
             // System.out.println(path);
