@@ -14,26 +14,26 @@ import java.util.*;
 /**
  * @author DNS
  */
-public class TestMaze {
+public class MaxFlow {
     static int maxFlow = 0;
-    Cell cell = new Cell();
+    Maze maze = new Maze();
 
     public static List<Edge> passedPathes;
-    public static List<Coord> visited = new ArrayList<>();
-    public static List<Coord> visitedCoords = new ArrayList<>();
+//    public static List<Coord> visited = new ArrayList<>();
+//    public static List<Coord> visitedCoords = new ArrayList<>();
 
-    public TestMaze(int cols, int rows) {
+    public MaxFlow(int cols, int rows) {
         Ranges.setSize(new Coord(cols, rows));
     }
 
     public void startNewMaze() {
-        cell.start();
+        maze.start();
         startMaze();
     }
 
     public void startMaze() {
         System.out.println("Построен новый лабиринт");
-        Graph g = cell.createGraphFromCoords();
+        Graph g = maze.createGraphFromCoords();
         if (g.getIstok() != null) {
             if (g.getIstok().getCoord().isExtreme) {
                 System.out.println("Поток = 0, минотавр находится у края лабиринта");
@@ -46,6 +46,8 @@ public class TestMaze {
     }
 
     public void getMaxFlowSize(Graph g) {
+
+        //Поиск потока в виде связанной хеш-таблицы, содержащей грани как ключи
         LinkedHashMap<Edge, Integer> flow = getMaxFlow(g, g.getIstok().getCoord(), g.getStok().getCoord());
         List<Coord> visited = new ArrayList<>();
         List<Edge> list = g.getEdges();
@@ -97,45 +99,41 @@ public class TestMaze {
     }
 
     public Box getBox(Coord coord) {
-        return cell.get(coord);
+        return maze.get(coord);
     }
 
     public void pressLeftButton(Coord coord) {
-        cell.setOpenedToBox(coord);
+        maze.setOpenedToBox(coord);
     }
 
     public void pressRightButton(Coord coord) {
-        cell.setMinotaurToBox(coord);
+        maze.setMinotaurToBox(coord);
     }
 
 
     static LinkedHashMap<Edge, Integer> getMaxFlow(Graph g, Coord source,
-                                                   Coord sink) {
-        // The path from source to sink that is found in each iteration
+                                                   Coord stok) {
+        //Путь от истока к стоку, найденный для каждой итерации
         LinkedList<Edge> path;
         passedPathes = new LinkedList<>();
-        // The flow, i.e. the capacity of each edge that is actually used
+        // Поток, то есть ёмкость каждой грани, которая была использована
         LinkedHashMap<Edge, Integer> flow = new LinkedHashMap<Edge, Integer>();
-        // Create initial empty flow.
+        // Создаём начальный пустой поток
         for (Edge e : g.getEdges()) {
             flow.put(e, 0);
         }
 
-        // The Algorithm itself
-        while ((path = bfs(g, source, sink, flow)) != null) {
+        // Основной алгоритм нахождения максимального потока
+        while ((path = bfs(g, source, stok, flow)) != null) {
             maxFlow++;
             passedPathes.addAll(path);
-            // Activating this output will illustrate how the algorithm works
-            // System.out.println(path);
-            // Find out the flow that can be sent on the found path.
+        //path - новый найденный путь от истока к стоку
             int minCapacity = Integer.MAX_VALUE;
             Object lastNode = source;
             for (Edge edge : path) {
                 int c;
-                // Although the edges are directed they can be used in both
-                // directions if the capacity is partially used, so this if
-                // statement is necessary to find out the edge's actual
-                // direction.
+                // Грани могут быть использованы в обоих направлениях
+                // поэтому добавляем это условие для того, чтобы найти действительное направление грани
                 if (edge.getStart().equals(lastNode)) {
                     c = edge.getCapacity() - flow.get(edge);
                     lastNode = edge.getTarget();
@@ -147,12 +145,9 @@ public class TestMaze {
                     minCapacity = c;
                 }
             }
-
-            // Change flow of all edges of the path by the value calculated
-            // above.
+            //Изменяем поток всех граней пути, в оответствии с вычисленным значением(см. выше)
             lastNode = source;
             for (Edge edge : path) {
-                // If statement like above
                 if (edge.getStart().equals(lastNode)) {
                     flow.put(edge, flow.get(edge) + minCapacity);
                     lastNode = edge.getTarget();
@@ -165,31 +160,29 @@ public class TestMaze {
         return flow;
     }
 
-
+//нахождение конкретного пути, не пересекающегося с ранее найденными
     static LinkedList<Edge> bfs(Graph g, Coord start, Coord target,
                                 HashMap<Edge, Integer> flow) {
-        // The edge by which a node was reached.
+        // Грань, по которой была достигнута вершина нрафа
         HashMap<Coord, Edge> parent = new HashMap<Coord, Edge>();
-        // All outer nodes of the current search iteration.
-        LinkedList<Coord> fringe = new LinkedList<>();
-        // We need to put the start node into those two.
+        // Все внешние вершины для текущей итерафии поиска
+        LinkedList<Coord> path = new LinkedList<>();
         parent.put(start, null);
-        fringe.add(start);
-        // The actual algorithm
+        path.add(start);
+        // Алгоритм нахождения пути
+        //метка, к которой возвращаемся в случае , если найден сток
         all:
-        while (!fringe.isEmpty()) {
-            // This variable is needed to prevent the JVM from having a
-            // concurrent modification
-            LinkedList<Coord> newFringe = new LinkedList<>();
-            // Iterate through all nodes in the fringe.
-            for (Coord coord : fringe) {
+        while (!path.isEmpty()) {
+            // Эта переменная нужна, чтобы предотвратить concurrent modification exception у JVM
+            LinkedList<Coord> newPath = new LinkedList<>();
+            // Итерация по всем вершинам в переменной ringe
+            for (Coord coord : path) {
 //                Node node = g.getNode(nodeID);
                 Node node = g.getNode(coord.toString());
                 // Iterate through all the edges of the node.
                 for (int i = 0; i < node.getOutLeadingOrder(); i++) {
                     Edge e = node.getEdge(i);
-                    // Only add the node if the flow can be changed in an out
-                    // leading direction. Also break, if the target is reached.
+                //Выходим из цикла, если достигнут сток
                     if (flow.get(e) == null) {
                         break all;
                     }
@@ -200,7 +193,7 @@ public class TestMaze {
                         if (e.getTarget().equals(target)) {
                             break all;
                         }
-                        newFringe.add(e.getTarget());
+                        newPath.add(e.getTarget());
                     } else if (e.getTarget().equals(coord)
                             && !parent.containsKey(e.getStart())
                             && flow.get(e) > 0) {
@@ -208,24 +201,24 @@ public class TestMaze {
                         if (e.getStart().equals(target)) {
                             break all;
                         }
-                        newFringe.add(e.getStart());
+                        newPath.add(e.getStart());
                     }
                 }
             }
-            // Replace the fringe by the new one.
-            fringe = newFringe;
+            // Заменяем путь на новый
+            path = newPath;
         }
 
-        // Return null, if no path was found.
-        if (fringe.isEmpty()) {
+        // Возвращаем null, если путь пуст
+        if (path.isEmpty()) {
             return null;
         }
         // If a path was found, reconstruct it.
         Coord node = target;
-        LinkedList<Edge> path = new LinkedList<Edge>();
+        LinkedList<Edge> fpath = new LinkedList<Edge>();
         while (!node.equals(start)) {
             Edge e = parent.get(node);
-            path.addFirst(e);
+            fpath.addFirst(e);
             if (e != null) {
                 if (e.getStart() != null) {
                     if (e.getStart().equals(node)) {
@@ -238,6 +231,6 @@ public class TestMaze {
                 return null;
             }
         }
-        return path;
+        return fpath;
     }
 }

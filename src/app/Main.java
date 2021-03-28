@@ -3,7 +3,12 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package minotaurMaze;
+package app;
+
+import minotaurMaze.Box;
+import minotaurMaze.Coord;
+import minotaurMaze.MaxFlow;
+import minotaurMaze.Ranges;
 
 import java.awt.Dimension;
 import java.awt.Graphics;
@@ -18,30 +23,35 @@ import javax.swing.JPanel;
 import javax.swing.WindowConstants;
 
 /**
- *
  * @author DNS
  */
-class MinotaurMaze extends JFrame {
+class Main extends JFrame {
 
     /**
      * @param args the command line arguments
      */
-    private TestMaze testMaze;
+    //стандартные объекты для прорисовки интерфейса
+    private MaxFlow maxFlow;
     private JPanel panel;
-
+    //задание размеров поля
     private final int COLS = 6;
     private final int ROWS = 6;
     private final int IMAGES_SIZE = 50;
 
+    //Вход в программу
     public static void main(String[] args) {
-        new MinotaurMaze().setVisible(true);
+        new Main().setVisible(true);
     }
 
-    private MinotaurMaze() {
-        testMaze = new TestMaze(COLS, ROWS);
-        testMaze.startNewMaze();
+    //Построение лабиринта
+    private Main() {
+        maxFlow = new MaxFlow(COLS, ROWS);
+        maxFlow.startNewMaze();
+        //метод установки изображений
         setImages();
+        //метод установки панели
         initPanel();
+        //метод установки фрейма, интерфейса приложения
         initFrame();
     }
 
@@ -51,10 +61,11 @@ class MinotaurMaze extends JFrame {
             protected void paintComponent(Graphics g) {
                 super.paintComponent(g);
                 for (Coord coord : Ranges.getAllCoords()) {
-                    g.drawImage((Image) testMaze.getBox(coord).image, coord.x * IMAGES_SIZE, coord.y * IMAGES_SIZE, this);
+                    g.drawImage((Image) maxFlow.getBox(coord).image, coord.x * IMAGES_SIZE, coord.y * IMAGES_SIZE, this);
                 }
             }
         };
+        //добавление слушателей для обработки нажатий мыши
         panel.addMouseListener(new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
@@ -62,49 +73,56 @@ class MinotaurMaze extends JFrame {
                 int y = e.getY() / IMAGES_SIZE;
                 Coord coord = new Coord(x, y);
                 if (e.getButton() == MouseEvent.BUTTON1) {
-                    testMaze.pressLeftButton(coord);
+                    maxFlow.pressLeftButton(coord);
                 }
                 if (e.getButton() == MouseEvent.BUTTON3) {
-                    testMaze.pressRightButton(coord);
+                    maxFlow.pressRightButton(coord);
                 }
                 if (e.getButton() == MouseEvent.BUTTON2) {
-                    testMaze.startNewMaze();
+                    //метод, заново рисующий лабиринт
+                    maxFlow.startNewMaze();
                 }
+                //метод, заново рисующий панель с лабиринтом
                 panel.repaint();
             }
         });
+        //добавление слушателей для обработки нажатия клавиши энтер
         addKeyListener(new KeyAdapter() {
             @Override
             public void keyPressed(KeyEvent e) {
-                if(e.getKeyCode() == KeyEvent.VK_ENTER){
-                    testMaze.startMaze();
+                if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+                    maxFlow.startMaze();
                 }
                 panel.repaint();
             }
         });
-
+        //установка размеров поля для панели
         panel.setPreferredSize(new Dimension(
                 Ranges.getSize().x * IMAGES_SIZE,
                 Ranges.getSize().y * IMAGES_SIZE));
         add(panel);
     }
 
+    //прорисовка интерфейса
     private void initFrame() {
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+        //установка заголовка
         setTitle("Minotaur Maze");
         setResizable(false);
+        //установка видимости для окна
         setVisible(true);
         pack();
         setLocationRelativeTo(null);
+        //установка иконки
         setIconImage(getImage("mino"));
     }
-
+    //прорисовка изображений для ячеек поля
     private void setImages() {
         for (Box box : Box.values()) {
             box.image = getImage(box.name().toLowerCase());
         }
     }
-
+    //получение изображений из папки ресурсов
     private Image getImage(String name) {
         String filename = "/img/" + name.toLowerCase() + ".png";
         ImageIcon icon = new ImageIcon(getClass().getResource(filename));

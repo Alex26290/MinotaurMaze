@@ -11,12 +11,15 @@ import java.util.Random;
 /**
  * @author DNS
  */
+
+//Класс для работы с координатами
 public class Ranges {
 
     private static Coord size;
     public static ArrayList<Coord> allCoords;
     private static Random random = new Random();
 
+    //Установка размеров
     static void setSize(Coord _size) {
         size = _size;
         allCoords = new ArrayList<>();
@@ -27,7 +30,7 @@ public class Ranges {
         }
     }
 
-    //получение размеров поля
+    //Получение размеров поля
     public static Coord getSize() {
         return size;
     }
@@ -41,10 +44,12 @@ public class Ranges {
                 && coord.y >= 0 && coord.y < size.y;
     }
 
+    //Получение случайной координаты для прорисовки лабиринта
     static Coord getRandomCoord() {
         return new Coord(random.nextInt(size.x), random.nextInt(size.y));
     }
 
+    //Метод для получения ячеек вокруг текущей по координатам текущей клетки
     public static ArrayList<Coord> getCoordsAround(Coord coord) {
         Coord around;
         ArrayList<Coord> list = new ArrayList<Coord>();

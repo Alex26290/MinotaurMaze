@@ -4,9 +4,7 @@ import minotaurMaze.Coord;
 
 import java.util.ArrayList;
 
-/**
- * The node class that is used for DirectedGraph
- */
+//Класс, описывающий вершину графа
 public class Node {
     private Coord coord;
 //У вершины графа есть список ребёр, которые отходят от вершины.

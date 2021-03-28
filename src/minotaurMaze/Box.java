@@ -8,6 +8,7 @@ package minotaurMaze;
 /**
  * @author Alexander
  */
+//перечисление, указывающее, какое изображение устанавливать для ячейки
 public enum Box {
     OPENED,
     CLOSED,

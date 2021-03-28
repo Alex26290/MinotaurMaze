@@ -8,68 +8,83 @@ import org.w3c.dom.ls.LSOutput;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Cell {
+//класс для построения лабиринта
+public class Maze {
 
-    public static Matrix cellMap;
+    public static Matrix matrix;
     public static List<Coord> nodesInGraph;
     public static List<Coord> visitedNodes;
 
+    //старт построения лабиринта
     void start() {
-        cellMap = new Matrix(Box.OPENED);
+        matrix = new Matrix(Box.OPENED);
         for (int j = 0; j < 8; j++) {
             Coord coord = Ranges.getRandomCoord();
-            cellMap.set(coord, Box.CLOSED);
+            matrix.set(coord, Box.CLOSED);
             if (j == 7) {
-                cellMap.set(coord, Box.MINO);
+                matrix.set(coord, Box.MINO);
             }
         }
     }
 
     public static Box get(Coord coord) {
-        return cellMap.get(coord);
+        return matrix.get(coord);
     }
 
+    //установка картинки с открытым полем в ячейку
     void setOpenedToBox(Coord coord) {
-        if (cellMap.get(coord) == Box.OPENED || cellMap.get(coord) == Box.MINO) {
-            cellMap.set(coord, Box.CLOSED);
-        } else if (cellMap.get(coord) == Box.CLOSED) {
-            cellMap.set(coord, Box.OPENED);
+        if (matrix.get(coord) == Box.OPENED || matrix.get(coord) == Box.MINO) {
+            matrix.set(coord, Box.CLOSED);
+        } else if (matrix.get(coord) == Box.CLOSED) {
+            matrix.set(coord, Box.OPENED);
         }
     }
 
+    //проверка, что в данной клетке находится минотавр
     public boolean isMinotaur() {
         boolean isMinotaur = false;
         List<Coord> allCoords = Ranges.getAllCoords();
         for (Coord c : allCoords) {
-            if (cellMap.get(c) == Box.MINO) {
+            if (matrix.get(c) == Box.MINO) {
                 isMinotaur = true;
             }
         }
         return isMinotaur;
     }
 
+    //установка минотавра в ячейку
     void setMinotaurToBox(Coord coord) {
         if (!isMinotaur()) {
-            cellMap.set(coord, Box.MINO);
+            matrix.set(coord, Box.MINO);
         }
     }
 
+    //построение графа из текущего лабиринта
     public Graph createGraphFromCoords() {
         Graph graph = new Graph();
         nodesInGraph = new ArrayList<>();
         visitedNodes = new ArrayList<>();
         List<Coord> coords = Ranges.getAllCoords();
+        //добавляем вершины в граф
         addNodesIntoGraph(graph, coords);
+        //добавляем вершины со стоком в граф
         addStokNodeIntoGraph(graph);
         for (Coord coord : coords) {
-            if (cellMap.get(coord) == Box.MINO) {
+            //ищем вершину с минотавром и строим от неё граф
+            if (matrix.get(coord) == Box.MINO) {
+                //добавляем клетку в список посещённых
                 visitedNodes.add(coord);
                 addNodeIntoGraph(graph, coord);
+                //ищем клетки вокруг текущей
                 ArrayList<Coord> coordsAround = Ranges.getCoordsAround(coord);
+                //Если количество клеток вокруг текущей не 4(считаются только те, которые соприкасаются гранями,
+                // а не расположенные по диагонали), то устанавливаем флаг, говорящий, что клетка находится на краю лабиринта
                 if (coordsAround.size() != 4) {
                     coord.setExtreme(true);
                 }
+                //устанавливаем клетку истока в граф
                 graph.setIstok(new Node(coord));
+                //создаём грани для вершин графа
                 for (Coord coord2 : coordsAround) {
                     if (nodesInGraph.contains(coord2)) {
                         visitedNodes.add(coord2);
@@ -83,6 +98,7 @@ public class Cell {
                 }
 
                 List<Coord> coordsAroundBasis = findNewListOfAroundCoords(graph, coordsAround);
+                //повторем процесс для всех клеток, пока граф не будет построен
                 while (!isEdgesCreatedForAllCoords(coordsAroundBasis)) {
                     List<Coord> newCoordsAround = findNewListOfAroundCoords(graph, coordsAroundBasis);
                     coordsAroundBasis = newCoordsAround;
@@ -92,6 +108,7 @@ public class Cell {
         return graph;
     }
 
+    //ищем новый список координат вокруг ячейки дл новой ячейки
     private List<Coord> findNewListOfAroundCoords(Graph graph, List<Coord> coordsAround) {
         List<Coord> newCoordsAround = new ArrayList<>();
         for (Coord coord2 : coordsAround) {
@@ -123,6 +140,7 @@ public class Cell {
         return newCoordsAround;
     }
 
+    //проверяем, что грани созданы для всех вершин
     private boolean isEdgesCreatedForAllCoords(List<Coord> newCoordsAround) {
         boolean allCreated = true;
         for (Coord coord : newCoordsAround) {
@@ -135,53 +153,23 @@ public class Cell {
         return allCreated;
     }
 
+    //добавляем вершины в граф
     private void addNodesIntoGraph(Graph graph, List<Coord> coords) {
         for (Coord coord : coords) {
-            if (cellMap.get(coord) == Box.OPENED) {
+            if (matrix.get(coord) == Box.OPENED) {
                 addNodeIntoGraph(graph, coord);
             }
         }
     }
 
+    //добавляем вершину стока в граф
     public void addStokNodeIntoGraph(Graph graph) {
         Coord stok = new Coord(-1, -1);
         graph.setStok(new Node(stok));
         addNodeIntoGraph(graph, stok);
     }
 
-    public void createEdgesForCoords(Graph graph, Coord coord) {
-        ArrayList<Coord> coordsAround = Ranges.getCoordsAround(coord);
-        int coordsAroundSize = coordsAround.size();
-        if (coordsAroundSize == 4) {
-            for (Coord coord2 : coordsAround) {
-                if (nodesInGraph.contains(coord2) && !visitedNodes.contains(coord2)) {
-                    Edge edge = graph.addEdge(coord, coord2, 1);
-                    Node node = graph.getNode(coord.toString());
-                    if (node != null) {
-                        node.addEdge(edge);
-                    }
-                }
-            }
-            for (Coord coord2 : coordsAround) {
-                if (nodesInGraph.contains(coord2) && !visitedNodes.contains(coord2)) {
-                    visitedNodes.add(coord2);
-                    createEdgesForCoords(graph, coord2);
-                }
-            }
-        } else {
-            if (nodesInGraph.contains(coord)) {
-                createStokEdgeForCoord(graph, coord);
-            }
-        }
-
-    }
-
-    private void createStokEdgeForCoord(Graph graph, Coord coord) {
-        Edge edge = graph.addEdge(coord, graph.getStok().getCoord(), 1);
-        Node node = graph.getNode(coord.toString());
-        node.addEdge(edge);
-    }
-
+    //метод для добавления вершины в граф
     public void addNodeIntoGraph(Graph graph, Coord coord) {
         graph.addNode(coord);
         nodesInGraph.add(coord);

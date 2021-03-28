@@ -8,6 +8,7 @@ package minotaurMaze;
 /**
  * @author DNS
  */
+//Класс, описывающий координаты(x,y), ячейки лабиринта
 public class Coord {
 
     public int x;

@@ -4,17 +4,18 @@ import minotaurMaze.Coord;
 
 import java.util.*;
 
+//Класс, описывающий граф
 public class Graph {
     private Map<String, Node> nodes = new HashMap<>();
     private Node istok;
     private Node stok;
     private LinkedList<Edge> edges = new LinkedList<>();
 
-
+    //Метод для добавления вершины
     public void addNode(Coord coord) {
         nodes.put(coord.toString(), new Node(coord));
     }
-
+    //Метод для добавления грани
     public Edge addEdge(Coord istok, Coord stok, int capacity) {
         Edge edge = new Edge(istok, stok, capacity);
         if (!this.edges.contains(edge)) {

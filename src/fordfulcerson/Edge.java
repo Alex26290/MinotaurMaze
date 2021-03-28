@@ -4,25 +4,24 @@ import minotaurMaze.Coord;
 
 import java.util.Objects;
 
-/**
- * The edge class that is used for DirectedGraph
- */
+
+//Класс, описывающий грань графа
 public class Edge {
 
     private final Coord target;
     private final Coord start;
     private int capacity;
-
+//Конструктор
     public Edge(Coord start, Coord target, int capacity) {
         this.start = start;
         this.target = target;
         this.capacity = capacity;
     }
-
+    //Геттер для стока
     public Coord getTarget() {
         return target;
     }
-
+    //Геттер для истока
     public Coord getStart() {
         return start;
     }
