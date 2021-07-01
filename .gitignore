@@ -1,5 +1,4 @@
 .idea
-.gitignore
 build.xml
 manifest.mf
 MinotaurMaze.iml
